@@ -258,9 +258,11 @@ def render_document(doc_data):
 
 def render_tree(folder_data, prefix=""):
     """Recursively render folder tree in sidebar."""
-    # Sort by order, then alphabetically
-    items = sorted(folder_data.items(), 
-                   key=lambda x: (x[1].get("order", 999), x[0].lower()))
+    # Skip root_docs which is a list, not a folder dict
+    items = sorted(
+        [(k, v) for k, v in folder_data.items() if k != "root_docs"],
+        key=lambda x: (x[1].get("order", 999), x[0].lower())
+    )
     
     for name, data in items:
         if name == "order":  # Skip order field
