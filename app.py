@@ -7,10 +7,10 @@ Features:
 - Hierarchical tree navigation with expand/collapse
 - Click-to-open docs in sidebar
 - Auto-index page generation
-- Frontmatter support with badges
+- Frontmatter support
 - Mobile-responsive layout
 
-v2.3 — Fixed tree rendering to show actual content, proper indentation, no nesting cards
+v2.4 — Clean tree structure: only folders and documents, no internal keys
 """
 
 import streamlit as st
@@ -52,11 +52,10 @@ def parse_frontmatter(text):
         for i, line in enumerate(lines[1:]):
             if line.strip() == "---":
                 in_frontmatter = False
-                body_lines = lines[i+2:]  # After closing ---
+                body_lines = lines[i+2:]
                 break
             fm_lines.append(line)
         
-        # Build metadata from frontmatter lines
         for line in fm_lines:
             if ":" in line:
                 key, value = line.split(":", 1)
@@ -129,7 +128,6 @@ def load_content_tree():
             text = file_path.read_text()
             clean_path = str(file_path).replace("content/", "").replace("content\\", "")
             
-            # Extract folder hierarchy
             parts = clean_path.split("/")
             folder_path = "/".join(parts[:-1]) if len(parts) > 1 else "root"
             
@@ -146,22 +144,40 @@ def load_content_tree():
                 "title": metadata.get("title", clean_path.replace(".md", "").replace("_", " ").title()),
             }
             
-            # Build tree structure
+            # Build tree structure - folder hierarchy only
             folder_parts = folder_path.split("/") if folder_path != "root" else []
             current = tree
+            
+            # Navigate/create folder nodes
             for part in folder_parts:
                 if part not in current:
-                    current[part] = {"type": "folder", "order": get_folder_order(part), "children": {}}
+                    current[part] = {
+                        "type": "folder",
+                        "name": part,
+                        "order": get_folder_order(part),
+                        "children": []
+                    }
                 current = current[part]["children"]
             
-            # Add file to leaf folder
+            # Add doc to the leaf folder's children
             if folder_path != "root":
                 parent = tree
                 for part in folder_parts[:-1]:
                     parent = parent[part]["children"]
                 leaf = folder_parts[-1]
-                parent[leaf]["children"]["__docs__"] = parent[leaf].get("__docs__", [])
-                parent[leaf]["children"]["__docs__"].append(clean_path)
+                parent[leaf]["children"].append({
+                    "type": "document",
+                    "name": clean_path,
+                    "title": docs[clean_path]["title"]
+                })
+            else:
+                # Root docs - add to tree's children
+                tree["__root_docs__"] = tree.get("__root_docs__", [])
+                tree["__root_docs__"].append({
+                    "type": "document",
+                    "name": clean_path,
+                    "title": docs[clean_path]["title"]
+                })
                 
         except Exception as e:
             st.error(f"Error loading {file_path}: {e}")
@@ -185,13 +201,12 @@ def render_breadcrumbs(clean_path):
     
     crumb_links.append(parts[-1].replace(".md", ""))
     
-    # Render as markdown links
     links = []
     for i, link in enumerate(crumb_links):
         if link == "Home":
             links.append(f"[{link}](app.py)")
         elif link == crumb_links[-1]:
-            links.append(f"📄 {link}")  # Current page (no link)
+            links.append(f"📄 {link}")
         else:
             folder_path = "/".join(crumb_path[:i+1])
             links.append(f"[{link}](app.py)")
@@ -200,11 +215,7 @@ def render_breadcrumbs(clean_path):
 
 def render_document(doc_data):
     """Render a single document."""
-    metadata = doc_data["metadata"]
-    content = doc_data["content"]
-    
     st.title(doc_data["title"])
-    
     render_breadcrumbs(doc_data["clean_path"])
     st.divider()
     
@@ -215,9 +226,9 @@ def render_document(doc_data):
                 st.markdown(f"{indent}- [{h['text']}](#{h['id']})")
     
     st.divider()
-    st.markdown(content, unsafe_allow_html=False)
+    st.markdown(doc_data["content"], unsafe_allow_html=False)
     
-    # Navigation (Prev/Next)
+    # Navigation
     doc_path = doc_data["clean_path"]
     parts = doc_path.split("/")
     folder_path = "/".join(parts[:-1]) if len(parts) > 1 else "root"
@@ -230,33 +241,33 @@ def render_document(doc_data):
         col1, col2 = st.columns(2)
         with col1:
             if idx > 0:
-                prev = docs_in_folder[idx - 1]
                 if st.button("⬅️ Previous", key=f"prev_{doc_path}"):
-                    st.session_state.selected_doc = prev["clean_path"]
+                    st.session_state.selected_doc = docs_in_folder[idx - 1]["clean_path"]
         with col2:
             if idx < len(docs_in_folder) - 1:
-                next_doc = docs_in_folder[idx + 1]
                 if st.button("Next ➡️", key=f"next_{doc_path}"):
-                    st.session_state.selected_doc = next_doc["clean_path"]
+                    st.session_state.selected_doc = docs_in_folder[idx + 1]["clean_path"]
 
 # --- Sidebar Tree Rendering ---
 
-def render_tree_node(name, node, indent=0, prefix=""):
-    """Recursively render a tree node (folder or doc)."""
-    # Calculate indent spacing
+def render_tree_node(node, indent=0):
+    """Recursively render a tree node."""
     indent_str = "  " * indent
-    exp_key = f"exp_{prefix}_{name}" if prefix else f"exp_{name}"
-    is_expanded = exp_key in st.session_state.expanded_folders
     
-    # Render folder
     if node["type"] == "folder":
-        child_count = len(node.get("children", {}))
-        doc_count = len(node.get("__docs__", []))
+        # Get folder name and count
+        name = node["name"]
+        doc_count = len([c for c in node["children"] if c["type"] == "document"])
+        folder_count = len([c for c in node["children"] if c["type"] == "folder"])
         
-        # Label: name + count if any docs
+        # Label with counts if any
         label = name
-        if doc_count > 0:
-            label = f"{label} ({doc_count})"
+        total = doc_count + folder_count
+        if total > 0:
+            label = f"{label} ({total})"
+        
+        exp_key = f"exp_{indent}_{name}"
+        is_expanded = exp_key in st.session_state.expanded_folders
         
         with st.expander(f"{indent_str}{label}", expanded=is_expanded):
             if is_expanded:
@@ -264,25 +275,24 @@ def render_tree_node(name, node, indent=0, prefix=""):
             else:
                 st.session_state.expanded_folders.discard(exp_key)
             
-            # Render docs
-            for doc_path in node.get("__docs__", []):
-                doc = st.session_state.all_docs.get(doc_path)
-                if doc:
-                    if st.button(f"{indent_str}📄 {doc['title']}", key=f"doc_{doc_path}"):
-                        st.session_state.selected_doc = doc_path
+            # Render children (docs first, then folders)
+            for child in node["children"]:
+                if child["type"] == "document":
+                    doc = st.session_state.all_docs.get(child["name"])
+                    if doc:
+                        if st.button(f"{indent_str}📄 {doc['title']}", key=f"doc_{child['name']}"):
+                            st.session_state.selected_doc = child["name"]
             
-            # Render child folders
-            children = {k: v for k, v in node["children"].items() if k != "__docs__" and not k.startswith("__")}
-            for child_name, child_node in sorted(children.items(), 
-                                                  key=lambda x: (x[1].get("order", 999), x[0].lower())):
-                render_tree_node(child_name, child_node, indent + 1, f"{prefix}_{name}")
+            # Render subfolders
+            for child in node["children"]:
+                if child["type"] == "folder":
+                    render_tree_node(child, indent + 1)
     
-    # Render doc (leaf node)
-    elif node["type"] == "doc":
-        doc = st.session_state.all_docs.get(name)
+    elif node["type"] == "document":
+        doc = st.session_state.all_docs.get(node["name"])
         if doc:
-            if st.button(f"{indent_str}📄 {doc['title']}", key=f"doc_{name}"):
-                st.session_state.selected_doc = name
+            if st.button(f"{indent_str}📄 {doc['title']}", key=f"doc_{node['name']}"):
+                st.session_state.selected_doc = node["name"]
 
 # --- Main App ---
 
@@ -294,30 +304,35 @@ with st.sidebar:
     st.header(f"🤖 {APP_NAME}")
     st.divider()
     
-    # Home link
     if st.button("🏠 Home", key="home-link"):
         st.session_state.selected_doc = None
     
-    # Search
     search_query = st.text_input("🔍 Search...", "", placeholder="Search docs...")
     
     st.divider()
     st.subheader("📚 Documents")
     
-    # Render tree
     if tree:
-        for name, node in sorted(tree.items(), key=lambda x: (x[1].get("order", 999), x[0].lower())):
-            render_tree_node(name, node)
+        # Render root-level folders
+        for name, node in sorted(tree.items(), 
+                                  key=lambda x: (x[1].get("order", 999), x[0].lower())
+                                  if x[0] != "__root_docs__" else (999, x[0])):
+            if name == "__root_docs__":
+                for doc in node:
+                    doc_data = st.session_state.all_docs.get(doc["name"])
+                    if doc_data:
+                        if st.button(f"📄 {doc_data['title']}", key=f"doc_{doc['name']}"):
+                            st.session_state.selected_doc = doc["name"]
+            else:
+                render_tree_node(node)
     
     st.divider()
     st.caption(f"**Total:** {len(st.session_state.all_docs)} docs")
 
 # --- Main Content ---
-# Only show APP_NAME on home page
 if not st.session_state.selected_doc:
     st.title(f"🤖 {APP_NAME}")
 
-# Stats - only on home page
 if not st.session_state.selected_doc and not search_query:
     st.markdown("Your internal documentation platform.")
     
@@ -325,7 +340,7 @@ if not st.session_state.selected_doc and not search_query:
     with col1:
         st.metric("Documents", len(st.session_state.all_docs))
     with col2:
-        st.metric("Folders", len(tree))
+        st.metric("Folders", len([k for k in tree.keys() if k != "__root_docs__"]))
     with col3:
         st.metric("Status", "✅ Online")
 
@@ -349,12 +364,10 @@ if search_query:
     else:
         st.info("No matches found.")
 else:
-    # Home page or selected doc
     if st.session_state.selected_doc:
         doc = st.session_state.all_docs[st.session_state.selected_doc]
         render_document(doc)
     else:
-        # Home page (check for root index)
         home_doc = st.session_state.all_docs.get("index.md")
         if home_doc:
             render_document(home_doc)
