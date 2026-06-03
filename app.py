@@ -272,7 +272,7 @@ def render_tree_node(name, node, indent=0, prefix=""):
                         st.session_state.selected_doc = doc_path
             
             # Render child folders
-            children = {k: v for k, v in node["children"].items() if k != "__docs__"}
+            children = {k: v for k, v in node["children"].items() if k != "__docs__" and not k.startswith("__")}
             for child_name, child_node in sorted(children.items(), 
                                                   key=lambda x: (x[1].get("order", 999), x[0].lower())):
                 render_tree_node(child_name, child_node, indent + 1, f"{prefix}_{name}")
