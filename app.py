@@ -171,8 +171,9 @@ def load_content_tree():
                     "title": docs[clean_path]["title"]
                 })
             else:
-                # Root docs - add to tree's children
-                tree["__root_docs__"] = tree.get("__root_docs__", [])
+                # Root docs - add to tree's children list
+                if "__root_docs__" not in tree:
+                    tree["__root_docs__"] = []
                 tree["__root_docs__"].append({
                     "type": "document",
                     "name": clean_path,
