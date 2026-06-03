@@ -300,6 +300,7 @@ with st.sidebar:
     search_query = st.text_input("🔍 Search...", "", placeholder="Search docs...")
     
     st.subheader("📚 Documents")
+    st.caption("*Click folders to expand, docs to open*")
     render_tree(folder_tree)
     
     # Global stats
