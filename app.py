@@ -21,7 +21,6 @@ from datetime import datetime
 # --- Config ---
 APP_NAME = "Obsurdian v2"
 CONTENT_DIR = Path(os.environ.get("CONTENT_DIR", "content"))
-CACHE_DIR = CONTENT_DIR / ".obsurdian" / "cache"
 
 # --- Page Config ---
 st.set_page_config(
@@ -194,7 +193,7 @@ def render_breadcrumbs(clean_path):
         return  # Single file, no breadcrumbs needed
     
     crumb_path = []
-    crumb_links = [("[🏠 Home](app.py)")]
+    crumb_links = ["[🏠 Home](app.py)"]
     
     for i, part in enumerate(parts[:-1]):
         crumb_path.append(part)
@@ -229,8 +228,8 @@ def render_document(doc_data):
     
     st.divider()
     
-    # Content
-    st.markdown(content)
+    # Content - use markdown with proper settings
+    st.markdown(content, unsafe_allow_html=False)
     
     # Navigation (Prev/Next)
     doc_path = doc_data["clean_path"]
@@ -246,13 +245,13 @@ def render_document(doc_data):
         with col1:
             if idx > 0:
                 prev = docs_in_folder[idx - 1]
-                st.page_link("app.py", label=f"⬅️ {prev['metadata'].get('title', 'Previous')}", 
-                           disabled=False, help="Previous document")
+                if st.button("⬅️ Previous", key=f"prev_{doc_path}"):
+                    st.session_state.selected_doc = prev["clean_path"]
         with col2:
             if idx < len(docs_in_folder) - 1:
                 next_doc = docs_in_folder[idx + 1]
-                st.page_link("app.py", label=f"{next_doc['metadata'].get('title', 'Next')} ➡️", 
-                           disabled=False, help="Next document")
+                if st.button("Next ➡️", key=f"next_{doc_path}"):
+                    st.session_state.selected_doc = next_doc["clean_path"]
 
 # --- Sidebar Navigation ---
 
@@ -265,7 +264,8 @@ def render_tree(folder_data, prefix=""):
     )
     
     for name, data in items:
-        if name == "order":  # Skip order field
+        # Skip order field
+        if name == "order":
             continue
             
         folder_name = re.sub(r'^\d+-', '', name)  # Remove prefix for display
