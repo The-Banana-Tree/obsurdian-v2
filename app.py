@@ -41,9 +41,11 @@ if "recent_docs" not in st.session_state:
 # --- Parsing Functions ---
 
 def parse_frontmatter(text):
-    """Parse YAML frontmatter from markdown."""
+    """Parse YAML frontmatter from markdown, return (metadata, body)."""
     metadata = {}
     lines = text.splitlines()
+    body_lines = lines  # Default to all lines if no frontmatter
+    
     if lines and lines[0].strip() == "---":
         in_frontmatter = True
         fm_lines = []
@@ -52,6 +54,8 @@ def parse_frontmatter(text):
                 in_frontmatter = False
                 break
             fm_lines.append(line)
+        
+        # Build metadata from frontmatter lines
         for line in fm_lines:
             if ":" in line:
                 key, value = line.split(":", 1)
@@ -61,7 +65,12 @@ def parse_frontmatter(text):
                     metadata[key] = [t.strip() for t in value.split(",") if t.strip()]
                 else:
                     metadata[key] = value
-    return metadata, text
+        
+        # Body starts after closing ---
+        body_start = len(fm_lines) + 2  # Skip opening --- + fm_lines + closing ---
+        body_lines = lines[body_start:]
+    
+    return metadata, "\n".join(body_lines)
 
 def auto_number_headings(text):
     """Auto-number headings in markdown."""
