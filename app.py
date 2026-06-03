@@ -259,11 +259,14 @@ def render_tree(folder_data, prefix=""):
         # Count docs in this folder
         doc_count = len(data.get("docs", []))
         
+        # Count subfolders
+        subfolder_count = len([k for k, v in data.items() if k != "order" and k != "docs"])
+        
         # Create expandable section
         exp_key = f"exp_{prefix}_{name}" if prefix else f"exp_{name}"
         is_expanded = exp_key in st.session_state.expanded_folders
         
-        with st.expander(f"📁 {folder_name} ({doc_count} docs)", expanded=is_expanded):
+        with st.expander(f"📁 {folder_name} ({subfolder_count} folders, {doc_count} pages)", expanded=is_expanded):
             # Update expanded state
             if is_expanded:
                 st.session_state.expanded_folders.add(exp_key)
