@@ -8,7 +8,7 @@ Features:
 - Click-to-open docs in sidebar
 - Auto-index page generation
 - Frontmatter support with badges
-- Mobile-responsive layout\n\nv2.2 — Removed metadata badges from doc pages for clean UI
+- Mobile-responsive layout
 """
 
 import streamlit as st
