@@ -166,26 +166,6 @@ def load_all_docs():
 
 # --- Rendering Functions ---
 
-def render_metadata(metadata):
-    """Render frontmatter as badges."""
-    badges = []
-    if metadata.get("status"):
-        status = metadata["status"]
-        color = "green" if status.lower() in ["active", "done"] else "orange"
-        badges.append(f":{color}[{status}]")
-    if metadata.get("owner"):
-        badges.append(f":blue[{metadata['owner']}]")
-    if metadata.get("type"):
-        badges.append(f":orange[{metadata['type']}]")
-    if metadata.get("tags"):
-        for tag in metadata["tags"]:
-            badges.append(f":gray[{tag}]")
-    if metadata.get("created"):
-        badges.append(f":purple[{metadata['created']}]")
-    
-    if badges:
-        st.markdown(" | ".join(badges))
-
 def render_breadcrumbs(clean_path):
     """Render path breadcrumbs."""
     parts = clean_path.split("/")
@@ -211,9 +191,6 @@ def render_document(doc_data):
     title = metadata.get("title", doc_data["clean_path"].replace(".md", "").replace("_", " ").title())
     st.title(title)
     
-    # Metadata badges
-    render_metadata(metadata)
-    
     # Breadcrumbs
     render_breadcrumbs(doc_data["clean_path"])
     
@@ -228,7 +205,7 @@ def render_document(doc_data):
     
     st.divider()
     
-    # Content - use markdown with proper settings
+    # Content
     st.markdown(content, unsafe_allow_html=False)
     
     # Navigation (Prev/Next)
