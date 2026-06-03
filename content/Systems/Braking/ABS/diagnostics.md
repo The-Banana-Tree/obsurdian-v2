@@ -3,7 +3,10 @@ title: ABS Diagnostics
 type: Guide
 status: Active
 owner: Chassis Team
-tags: abs, diagnostics, troubleshooting
+tags:
+  - abs
+  - diagnostics
+  - troubleshooting
 ---
 
 # ABS Diagnostics

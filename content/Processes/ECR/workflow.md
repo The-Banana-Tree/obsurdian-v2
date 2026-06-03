@@ -3,7 +3,10 @@ title: ECR Process
 type: Workflow
 status: Active
 owner: Electronics Team
-tags: ecr, workflow, electronics
+tags:
+  - ecr
+  - workflow
+  - electronics
 ---
 
 # ECR Workflow

@@ -3,7 +3,10 @@ title: Braking Systems
 type: System
 status: Active
 owner: Chassis Team
-tags: braking, safety, mechanical
+tags:
+  - braking
+  - safety
+  - mechanical
 ---
 
 # Braking Systems

@@ -1,8 +1,10 @@
 ---
-title: Requirements
+title: System Requirements
 type: Documentation
 status: Active
-tags: requirements, specs
+tags:
+  - requirements
+  - specs
 ---
 
 # System Requirements

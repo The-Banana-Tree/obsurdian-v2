@@ -1,8 +1,9 @@
 ---
-title: Requirements
+title: Requirements Overview
 type: Page
 status: Active
-tags: requirements
+tags:
+  - requirements
 ---
 
 # Requirements Overview
