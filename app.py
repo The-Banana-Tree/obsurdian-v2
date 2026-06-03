@@ -299,6 +299,10 @@ with st.sidebar:
     st.header(f"🤖 {APP_NAME}")
     st.divider()
     
+    # Home link
+    if st.button("🏠 Home", key="home-link"):
+        st.session_state.selected_doc = None
+    
     # Search (simple in-memory)
     search_query = st.text_input("🔍 Search...", "", placeholder="Search docs...")
     
@@ -311,7 +315,9 @@ with st.sidebar:
     st.caption(f"**Total:** {len(st.session_state.all_docs)} docs")
 
 # --- Main Content ---
-st.title(f"🤖 {APP_NAME}")
+# Only show APP_NAME on home page
+if not st.session_state.selected_doc:
+    st.title(f"🤖 {APP_NAME}")
 
 # Stats - only on home page
 if not st.session_state.selected_doc and not search_query:
