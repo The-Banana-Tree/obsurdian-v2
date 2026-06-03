@@ -299,17 +299,6 @@ with st.sidebar:
     # Search (simple in-memory)
     search_query = st.text_input("🔍 Search...", "", placeholder="Search docs...")
     
-    # Recent docs
-    if st.session_state.recent_docs:
-        st.subheader("⏰ Recent")
-        for doc_path in st.session_state.recent_docs:
-            doc = st.session_state.all_docs.get(doc_path)
-            if doc:
-                title = doc["metadata"].get("title", doc_path.replace(".md", "").replace("_", " ").title())
-                st.caption(f"• {title}")
-        st.divider()
-    
-    # Folder tree
     st.subheader("📚 Documents")
     render_tree(folder_tree)
     
