@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Obsurdian v2 — Mobile-First Streamlit Docs Portal"""
+"""Obsurdian v2 — Mobile-First Streamlit Docs Portal (Hosted Ready)"""
 
 import streamlit as st
 from pathlib import Path
@@ -80,20 +80,6 @@ docs, folders = load_all_docs()
 # --- Mobile-First Layout ---
 st.title(f"🤖 {APP_NAME}")
 
-# Mobile card layout
-if not docs:
-    st.info("📁 Add `.md` files to `content/` folder to get started!")
-else:
-    # Show folder cards
-    st.subheader("📚 Documents")
-    
-    for folder in sorted(folders.keys()):
-        with st.expander(f"📁 {folder} ({len(folders[folder])} docs)", expanded=False):
-            for doc_path in sorted(folders[folder]):
-                title = doc_path.replace(".md", "").replace("_", " ").title()
-                # Create page link
-                st.page_link("app.py", label=f"📄 {title}", disabled=True)
-
 # Stats (mobile-friendly)
 col1, col2 = st.columns(2)
 with col1:
@@ -102,4 +88,18 @@ with col2:
     st.metric("Folders", len(folders))
 
 st.divider()
-st.caption("💡 *Tap folders to browse docs on mobile!*")
+
+# Folder cards (no page_link for Streamlit Cloud)
+if not docs:
+    st.info("📁 Add `.md` files to `content/` folder to get started!")
+else:
+    st.subheader("📚 Documents")
+    
+    for folder in sorted(folders.keys()):
+        with st.expander(f"📁 {folder} ({len(folders[folder])} docs)", expanded=False):
+            for doc_path in sorted(folders[folder]):
+                title = doc_path.replace(".md", "").replace("_", " ").title()
+                st.markdown(f"- **{title}** (`{doc_path}`)")
+
+st.divider()
+st.caption("💡 *Run locally: `streamlit run app.py` — then open in browser!*")
