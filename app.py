@@ -157,13 +157,14 @@ def load_content_tree():
                         "order": get_folder_order(part),
                         "children": []
                     }
-                current = current[part]["children"]
+                # Keep navigating through the dict, not the list
+                current = current[part]
             
-            # Add doc to the leaf folder's children
+            # Add doc to the leaf folder's children list
             if folder_path != "root":
                 parent = tree
                 for part in folder_parts[:-1]:
-                    parent = parent[part]["children"]
+                    parent = parent[part]
                 leaf = folder_parts[-1]
                 parent[leaf]["children"].append({
                     "type": "document",
