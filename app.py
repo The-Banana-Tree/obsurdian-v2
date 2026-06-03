@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Obsurdian v2 — Pure Markdown Docs, Simple Streamlit UI"""
+"""Obsurdian v2 — Mobile-First Streamlit Docs Portal"""
 
 import streamlit as st
 from pathlib import Path
@@ -10,12 +10,12 @@ import os
 APP_NAME = "Obsurdian v2"
 CONTENT_DIR = Path(os.environ.get("CONTENT_DIR", "content"))
 
-# --- Page Config ---
+# --- Page Config (Mobile Optimized) ---
 st.set_page_config(
     page_title=APP_NAME,
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",  # Sidebar hidden on mobile by default
 )
 
 # --- Auto-number headings ---
@@ -52,10 +52,8 @@ def load_all_docs():
     for file_path in CONTENT_DIR.rglob("*.md"):
         try:
             text = file_path.read_text()
-            # Clean path: remove leading "content/" or "content\\" 
             clean_path = str(file_path).replace("content/", "").replace("content\\", "")
             
-            # Extract folder path
             if "/" in clean_path or "\\" in clean_path:
                 folder = clean_path.split("/")[0] if "/" in clean_path else clean_path.split("\\")[0]
             else:
@@ -67,7 +65,6 @@ def load_all_docs():
                 "modified": file_path.stat().st_mtime
             }
             
-            # Track folders
             if folder not in folders:
                 folders[folder] = []
             folders[folder].append(clean_path)
@@ -80,48 +77,29 @@ def load_all_docs():
 # --- Load ---
 docs, folders = load_all_docs()
 
-# --- Sidebar ---
-with st.sidebar:
-    st.header(f"🤖 {APP_NAME}")
-    st.divider()
+# --- Mobile-First Layout ---
+st.title(f"🤖 {APP_NAME}")
+
+# Mobile card layout
+if not docs:
+    st.info("📁 Add `.md` files to `content/` folder to get started!")
+else:
+    # Show folder cards
+    st.subheader("📚 Documents")
     
-    if not docs:
-        st.info("📁 Add `.md` files to `content/` folder to get started!")
-    else:
-        # Group by folder
-        for folder in sorted(folders.keys()):
-            st.subheader(f"📁 {folder}")
+    for folder in sorted(folders.keys()):
+        with st.expander(f"📁 {folder} ({len(folders[folder])} docs)", expanded=False):
             for doc_path in sorted(folders[folder]):
                 title = doc_path.replace(".md", "").replace("_", " ").title()
-                # Create page link (Streamlit multi-page auto-detects subdirs)
+                # Create page link
                 st.page_link("app.py", label=f"📄 {title}", disabled=True)
-        
-        st.divider()
-        st.caption(f"{len(docs)} documents across {len(folders)} folders")
 
-# --- Route: folder view or doc view ---
-query = st.query_params.get("folder")
-if query and query in folders:
-    # Folder view
-    folder_name = query
-    st.title(f"📁 {folder_name}")
-    st.divider()
-    for doc_path in sorted(folders[folder_name]):
-        title = doc_path.replace(".md", "").replace("_", " ").title()
-        st.page_link("app.py", label=f"📄 {title}", disabled=True)
+# Stats (mobile-friendly)
+col1, col2 = st.columns(2)
+with col1:
+    st.metric("Documents", len(docs))
+with col2:
+    st.metric("Folders", len(folders))
 
-else:
-    # Home view
-    st.title(APP_NAME)
-    st.markdown("Your simple, markdown-powered documentation portal.")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Documents", len(docs))
-    with col2:
-        st.metric("Folders", len(folders))
-    with col3:
-        st.metric("Ready", "✅")
-    
-    st.divider()
-    st.markdown("💡 *Click any folder in sidebar to browse docs!*")
+st.divider()
+st.caption("💡 *Tap folders to browse docs on mobile!*")
