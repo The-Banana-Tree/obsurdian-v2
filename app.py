@@ -44,14 +44,16 @@ def parse_frontmatter(text):
     """Parse YAML frontmatter from markdown, return (metadata, body)."""
     metadata = {}
     lines = text.splitlines()
-    body_lines = lines  # Default to all lines if no frontmatter
     
     if lines and lines[0].strip() == "---":
         in_frontmatter = True
         fm_lines = []
-        for line in lines[1:]:
+        body_lines = []
+        
+        for i, line in enumerate(lines[1:]):
             if line.strip() == "---":
                 in_frontmatter = False
+                body_lines = lines[i+2:]  # After closing ---
                 break
             fm_lines.append(line)
         
@@ -65,10 +67,8 @@ def parse_frontmatter(text):
                     metadata[key] = [t.strip() for t in value.split(",") if t.strip()]
                 else:
                     metadata[key] = value
-        
-        # Body starts after closing ---
-        body_start = len(fm_lines) + 2  # Skip opening --- + fm_lines + closing ---
-        body_lines = lines[body_start:]
+    else:
+        body_lines = lines
     
     return metadata, "\n".join(body_lines)
 
