@@ -333,18 +333,20 @@ with st.sidebar:
 
 # --- Main Content ---
 st.title(f"🤖 {APP_NAME}")
-st.markdown("Your internal documentation platform.")
 
-# Stats
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Documents", len(st.session_state.all_docs))
-with col2:
-    st.metric("Folders", len(folder_tree) - 1)  # Exclude order field
-with col3:
-    st.metric("Status", "✅ Online")
+# Stats - only on home page
+if not st.session_state.selected_doc and not search_query:
+    st.markdown("Your internal documentation platform.")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Documents", len(st.session_state.all_docs))
+    with col2:
+        st.metric("Folders", len(folder_tree) - 1)
+    with col3:
+        st.metric("Status", "✅ Online")
 
-st.divider()
+    st.divider()
 
 # Filter by search
 if search_query:
