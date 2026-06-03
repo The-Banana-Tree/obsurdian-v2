@@ -370,3 +370,4 @@ else:
             - Frontmatter support
             - Mobile-responsive
             """)
+# Version: 2.2
